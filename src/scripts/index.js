@@ -98,11 +98,13 @@ openProfileFormButton.addEventListener("click", () => {
 profileAvatar.addEventListener("click", () => {
   avatarForm.reset();
   openModalWindow(avatarFormModalWindow);
+  clearValidation(avatarForm, validationSettings);
 });
 
 openCardFormButton.addEventListener("click", () => {
   cardForm.reset();
   openModalWindow(cardFormModalWindow);
+  clearValidation(cardForm, validationSettings);
 });
 
 // отображение карточек

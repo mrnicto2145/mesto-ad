@@ -26,9 +26,9 @@ function checkInputValidity(
   currentSettings
 ) {
   const errorNum = validator(inputElement);
-  if (errorNum === 0) {
-    hideInputError(formElement, inputElement, currentSettings);
-  } else if (errorNum === 1) {
+  hideInputError(formElement, inputElement, currentSettings);
+  let errorMessage = inputElement.getAttribute(currentSettings.errorMessage);
+  if (errorNum === 1 && errorMessage != null) {
     showInputError(
       formElement,
       inputElement,
