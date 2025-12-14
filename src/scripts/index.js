@@ -8,14 +8,21 @@
 
 import { initialCards } from "./cards.js";
 import { createCardElement, deleteCard, likeCard } from "./components/card.js";
-import { openModalWindow, closeModalWindow, setCloseModalWindowEventListeners } from "./components/modal.js";
+import {
+  openModalWindow,
+  closeModalWindow,
+  setCloseModalWindowEventListeners,
+} from "./components/modal.js";
+import { enableValidation, clearValidation } from "./components/validator.js";
 
 // DOM узлы
 const placesWrap = document.querySelector(".places__list");
 const profileFormModalWindow = document.querySelector(".popup_type_edit");
 const profileForm = profileFormModalWindow.querySelector(".popup__form");
 const profileTitleInput = profileForm.querySelector(".popup__input_type_name");
-const profileDescriptionInput = profileForm.querySelector(".popup__input_type_description");
+const profileDescriptionInput = profileForm.querySelector(
+  ".popup__input_type_description"
+);
 
 const cardFormModalWindow = document.querySelector(".popup_type_new-card");
 const cardForm = cardFormModalWindow.querySelector(".popup__form");
@@ -85,6 +92,7 @@ openProfileFormButton.addEventListener("click", () => {
   profileTitleInput.value = profileTitle.textContent;
   profileDescriptionInput.value = profileDescription.textContent;
   openModalWindow(profileFormModalWindow);
+  clearValidation(profileForm, validationSettings);
 });
 
 profileAvatar.addEventListener("click", () => {
@@ -113,3 +121,81 @@ const allPopups = document.querySelectorAll(".popup");
 allPopups.forEach((popup) => {
   setCloseModalWindowEventListeners(popup);
 });
+
+//Создание настроек валидации
+const usernameValidator = (inputElement) => {
+  const username = inputElement.value;
+  if (username.length < 2 || username.length > 40) {
+    return 1;
+  }
+  const re = /^[a-zA-Zа-яА-ЯёЁ\s\-]+$/;
+  if (!re.test(username)) {
+    return 1;
+  }
+  if (inputElement.validity.valid) {
+    return 0;
+  }
+  return 2;
+};
+
+const descriptionValidator = (inputElement) => {
+  const description = inputElement.value;
+  if (description.length < 2 || description.length > 200) {
+    return 1;
+  }
+  if (inputElement.validity.valid) {
+    return 0;
+  }
+  return 2;
+};
+
+const cardNameValidator = (inputElement) => {
+  const cardName = inputElement.value;
+  if (cardName.length < 2 || cardName.length > 40) {
+    return 1;
+  }
+  const re = /^[a-zA-Zа-яА-ЯёЁ\s\-]+$/;
+  if (!re.test(cardName)) {
+    return 1;
+  }
+  if (inputElement.validity.valid) {
+    return 0;
+  }
+  return 2;
+};
+
+const linkValidator = (inputElement) => {
+  const link = inputElement.value;
+  const urlPattern =
+    /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w\.-]*)*\/?(\?[&\w=]*)?(#[\w-]*)?$/i;
+  if (!urlPattern.test(link)) {
+    return 1;
+  }
+  if (inputElement.validity.valid) {
+    return 0;
+  }
+  return 2;
+};
+
+const constructErrorId = (inputElement) => {
+  return `#${inputElement.id}-error`;
+};
+
+const validationSettings = {
+  formSelector: ".popup__form",
+  inputSelector: ".popup__input",
+  submitButtonSelector: ".popup__button",
+  inactiveButtonClass: "popup__button_disabled",
+  inputErrorClass: "popup__input_type_error",
+  errorClass: "popup__error_visible",
+  errorMessage: "data-error-message",
+  getErrorId: constructErrorId,
+  formsCount: 3,
+  validators: [
+    [usernameValidator, descriptionValidator],
+    [cardNameValidator, linkValidator],
+    [linkValidator],
+  ],
+};
+
+enableValidation(validationSettings);
