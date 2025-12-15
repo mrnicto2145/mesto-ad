@@ -28,20 +28,22 @@ function checkInputValidity(
   const errorNum = validator(inputElement);
   hideInputError(formElement, inputElement, currentSettings);
   let errorMessage = inputElement.getAttribute(currentSettings.errorMessage);
-  if (errorNum === 1 && errorMessage != null) {
-    showInputError(
-      formElement,
-      inputElement,
-      inputElement.getAttribute(currentSettings.errorMessage),
-      currentSettings
-    );
-  } else {
-    showInputError(
-      formElement,
-      inputElement,
-      inputElement.validationMessage,
-      currentSettings
-    );
+  if (errorNum !== 0) {
+    if (errorNum === 1 && errorMessage != null) {
+      showInputError(
+        formElement,
+        inputElement,
+        inputElement.getAttribute(currentSettings.errorMessage),
+        currentSettings
+      );
+    } else {
+      showInputError(
+        formElement,
+        inputElement,
+        inputElement.validationMessage,
+        currentSettings
+      );
+    }
   }
 }
 
