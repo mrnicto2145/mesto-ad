@@ -272,7 +272,6 @@ enableValidation(validationSettings);
 
 Promise.all([getCardList(), getUserInfo()])
   .then(([cards, userData]) => {
-    console.log(cards);
     cards.forEach((data) => {
       let card=createCardElement(data, userData._id, {
           onPreviewPicture: handlePreviewPicture,
