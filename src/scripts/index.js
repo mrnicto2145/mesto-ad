@@ -237,7 +237,7 @@ const cardNameValidator = (inputElement) => {
 const linkValidator = (inputElement) => {
   const link = inputElement.value;
   const urlPattern =
-    /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w%\.-]*)*\/?(\?[&\w=]*)?(#[\w-]*)?$/i;
+    /^(https?:\/\/)?([\w-]{1,32}\.[\w-]{1,32})[^\s@]*$/;
   if (!urlPattern.test(link)) {
     return 1;
   }
