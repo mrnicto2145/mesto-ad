@@ -40,7 +40,7 @@ export const getLikesChampion = (cardList) =>
                 champions.set(user._id, champions.get(user._id) + 1);
             }
             else{
-                champions.set(user._id, 0);
+                champions.set(user._id, 1);
                 users.set(user._id, user.name);
             }
         });
