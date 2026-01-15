@@ -6,7 +6,6 @@
   Из index.js не допускается что то экспортировать
 */
 
-import { initialCards } from "./cards.js";
 import { createCardElement, deleteCard, likeCard } from "./components/card.js";
 import {
   openModalWindow,
@@ -14,6 +13,21 @@ import {
   setCloseModalWindowEventListeners,
 } from "./components/modal.js";
 import { enableValidation, clearValidation } from "./components/validator.js";
+import { 
+  getCardList,
+  getUserInfo,
+  setUserInfo,
+  setUserAvatar,
+  sendNewCard,
+  getUsers
+} from "./components/api.js";
+import { 
+  getRealUserList,
+  getLikesCount,
+  getLikesChampion,
+  getMostPopularCards
+ } from "./components/statistics.js";
+import { generateModalStatsElement, refreshStatisticsWindow } from "./components/statsModal.js";
 
 // DOM узлы
 const placesWrap = document.querySelector(".places__list");
@@ -44,6 +58,10 @@ const avatarFormModalWindow = document.querySelector(".popup_type_edit-avatar");
 const avatarForm = avatarFormModalWindow.querySelector(".popup__form");
 const avatarInput = avatarForm.querySelector(".popup__input");
 
+const cardStatsModalWindow = document.querySelector(".popup_type_info");
+const openCardStatsButton = document.querySelector(".header__logo");
+const cardStatsContent = cardStatsModalWindow.querySelector(".popup__content");
+
 const handlePreviewPicture = ({ name, link }) => {
   imageElement.src = link;
   imageElement.alt = name;
@@ -53,34 +71,70 @@ const handlePreviewPicture = ({ name, link }) => {
 
 const handleProfileFormSubmit = (evt) => {
   evt.preventDefault();
-  profileTitle.textContent = profileTitleInput.value;
-  profileDescription.textContent = profileDescriptionInput.value;
-  closeModalWindow(profileFormModalWindow);
+  const button = profileForm.querySelector(".button");
+  button.textContent = "Сохранение...";
+  setUserInfo({
+    name: profileTitleInput.value,
+    about: profileDescriptionInput.value,
+  })
+    .then((userData) => {
+      profileTitle.textContent = userData.name;
+      profileDescription.textContent = userData.about;
+      closeModalWindow(profileFormModalWindow);
+    })
+    .catch((err) => {
+      console.log(err);
+    })
+    .finally(() =>
+      button.textContent = "Сохранить"
+    );
 };
 
 const handleAvatarFromSubmit = (evt) => {
   evt.preventDefault();
-  profileAvatar.style.backgroundImage = `url(${avatarInput.value})`;
-  closeModalWindow(avatarFormModalWindow);
+  const button = avatarForm.querySelector(".button");
+  button.textContent = "Сохранение...";
+  setUserAvatar({avatar: avatarInput.value})
+    .then((userData) => {
+      profileAvatar.style.backgroundImage = `url(${userData.avatar})`;
+      closeModalWindow(avatarFormModalWindow);
+    })
+    .catch((err) => {
+      console.log(err);
+    })
+    .finally(() =>
+      button.textContent = "Сохранить"
+    );
 };
 
 const handleCardFormSubmit = (evt) => {
   evt.preventDefault();
-  placesWrap.prepend(
-    createCardElement(
-      {
-        name: cardNameInput.value,
-        link: cardLinkInput.value,
-      },
-      {
-        onPreviewPicture: handlePreviewPicture,
-        onLikeIcon: likeCard,
-        onDeleteCard: deleteCard,
-      }
-    )
-  );
-
-  closeModalWindow(cardFormModalWindow);
+  const button = cardForm.querySelector(".button");
+  button.textContent = "Создание...";
+  sendNewCard({
+    name: cardNameInput.value,
+    link: cardLinkInput.value,
+  })
+    .then((card) => {
+    placesWrap.prepend(
+      createCardElement(
+        card,
+        card.owner._id,
+        {
+          onPreviewPicture: handlePreviewPicture,
+          onLikeIcon: likeCard,
+          onDeleteCard: deleteCard,
+        }
+      )
+    );
+    closeModalWindow(cardFormModalWindow);
+    })
+    .catch((err) => {
+      console.log(err);
+    })
+    .finally(() =>
+      button.textContent = "Создать"
+    );
 };
 
 // EventListeners
@@ -107,15 +161,29 @@ openCardFormButton.addEventListener("click", () => {
   clearValidation(cardForm, validationSettings);
 });
 
-// отображение карточек
-initialCards.forEach((data) => {
-  placesWrap.append(
-    createCardElement(data, {
-      onPreviewPicture: handlePreviewPicture,
-      onLikeIcon: likeCard,
-      onDeleteCard: deleteCard,
+
+openCardStatsButton.addEventListener("click", () => {
+  refreshStatisticsWindow(cardStatsContent);
+    Promise.all([getUsers(), getCardList()])
+    .then(([userList, cardList]) => {
+      const userChampion = getLikesChampion(cardList); 
+      generateModalStatsElement(
+        cardStatsContent,
+        "Статистика карточек",
+        [
+          ["Всего пользователей", getRealUserList(userList, cardList).length],
+          ["Всего лайков", getLikesCount(cardList)],
+          ["Максимально лайков от одного", userChampion.score],
+          ["Чемпион лайков", userChampion.username]
+        ],
+        "Популярные карточки:",
+        getMostPopularCards(cardList)
+      );
     })
-  );
+    .catch((err) => {
+      console.log(err)
+    });
+  openModalWindow(cardStatsModalWindow);
 });
 
 //настраиваем обработчики закрытия попапов
@@ -169,7 +237,7 @@ const cardNameValidator = (inputElement) => {
 const linkValidator = (inputElement) => {
   const link = inputElement.value;
   const urlPattern =
-    /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w\.-]*)*\/?(\?[&\w=]*)?(#[\w-]*)?$/i;
+    /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w%\.-]*)*\/?(\?[&\w=]*)?(#[\w-]*)?$/i;
   if (!urlPattern.test(link)) {
     return 1;
   }
@@ -201,3 +269,28 @@ const validationSettings = {
 };
 
 enableValidation(validationSettings);
+
+Promise.all([getCardList(), getUserInfo()])
+  .then(([cards, userData]) => {
+    console.log(cards);
+    cards.forEach((data) => {
+      let card=createCardElement(data, userData._id, {
+          onPreviewPicture: handlePreviewPicture,
+          onLikeIcon: likeCard,
+          onDeleteCard: (data.owner._id === userData._id) ? deleteCard : null,
+        });
+      if (data.owner._id !== userData._id){ 
+        let deleteButton = card.querySelector(".card__control-button_type_delete");
+        deleteButton.remove();
+      }
+      placesWrap.append(card);
+    });
+    profileTitle.textContent = userData.name;
+    profileDescription.textContent = userData.about;
+    profileAvatar.style.backgroundImage = `url(${userData.avatar})`;
+  })
+  .catch((err) => {
+    console.log(err); // В случае возникновения ошибки выводим её в консоль
+  });
+
+
