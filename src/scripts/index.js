@@ -13,21 +13,24 @@ import {
   setCloseModalWindowEventListeners,
 } from "./components/modal.js";
 import { enableValidation, clearValidation } from "./components/validator.js";
-import { 
+import {
   getCardList,
   getUserInfo,
   setUserInfo,
   setUserAvatar,
   sendNewCard,
-  getUsers
+  getUsers,
 } from "./components/api.js";
-import { 
+import {
   getRealUserList,
   getLikesCount,
   getLikesChampion,
-  getMostPopularCards
- } from "./components/statistics.js";
-import { generateModalStatsElement, refreshStatisticsWindow } from "./components/statsModal.js";
+  getMostPopularCards,
+} from "./components/statistics.js";
+import {
+  generateModalStatsElement,
+  refreshStatisticsWindow,
+} from "./components/statsModal.js";
 
 // DOM узлы
 const placesWrap = document.querySelector(".places__list");
@@ -85,16 +88,14 @@ const handleProfileFormSubmit = (evt) => {
     .catch((err) => {
       console.log(err);
     })
-    .finally(() =>
-      button.textContent = "Сохранить"
-    );
+    .finally(() => (button.textContent = "Сохранить"));
 };
 
 const handleAvatarFromSubmit = (evt) => {
   evt.preventDefault();
   const button = avatarForm.querySelector(".button");
   button.textContent = "Сохранение...";
-  setUserAvatar({avatar: avatarInput.value})
+  setUserAvatar({ avatar: avatarInput.value })
     .then((userData) => {
       profileAvatar.style.backgroundImage = `url(${userData.avatar})`;
       closeModalWindow(avatarFormModalWindow);
@@ -102,9 +103,7 @@ const handleAvatarFromSubmit = (evt) => {
     .catch((err) => {
       console.log(err);
     })
-    .finally(() =>
-      button.textContent = "Сохранить"
-    );
+    .finally(() => (button.textContent = "Сохранить"));
 };
 
 const handleCardFormSubmit = (evt) => {
@@ -116,25 +115,19 @@ const handleCardFormSubmit = (evt) => {
     link: cardLinkInput.value,
   })
     .then((card) => {
-    placesWrap.prepend(
-      createCardElement(
-        card,
-        card.owner._id,
-        {
+      placesWrap.prepend(
+        createCardElement(card, card.owner._id, {
           onPreviewPicture: handlePreviewPicture,
           onLikeIcon: likeCard,
           onDeleteCard: deleteCard,
-        }
-      )
-    );
-    closeModalWindow(cardFormModalWindow);
+        })
+      );
+      closeModalWindow(cardFormModalWindow);
     })
     .catch((err) => {
       console.log(err);
     })
-    .finally(() =>
-      button.textContent = "Создать"
-    );
+    .finally(() => (button.textContent = "Создать"));
 };
 
 // EventListeners
@@ -161,12 +154,11 @@ openCardFormButton.addEventListener("click", () => {
   clearValidation(cardForm, validationSettings);
 });
 
-
 openCardStatsButton.addEventListener("click", () => {
   refreshStatisticsWindow(cardStatsContent);
-    Promise.all([getUsers(), getCardList()])
+  Promise.all([getUsers(), getCardList()])
     .then(([userList, cardList]) => {
-      const userChampion = getLikesChampion(cardList); 
+      const userChampion = getLikesChampion(cardList);
       generateModalStatsElement(
         cardStatsContent,
         "Статистика карточек",
@@ -174,14 +166,14 @@ openCardStatsButton.addEventListener("click", () => {
           ["Всего пользователей", getRealUserList(userList, cardList).length],
           ["Всего лайков", getLikesCount(cardList)],
           ["Максимально лайков от одного", userChampion.score],
-          ["Чемпион лайков", userChampion.username]
+          ["Чемпион лайков", userChampion.username],
         ],
         "Популярные карточки:",
         getMostPopularCards(cardList)
       );
     })
     .catch((err) => {
-      console.log(err)
+      console.log(err);
     });
   openModalWindow(cardStatsModalWindow);
 });
@@ -236,8 +228,7 @@ const cardNameValidator = (inputElement) => {
 
 const linkValidator = (inputElement) => {
   const link = inputElement.value;
-  const urlPattern =
-    /^(https?:\/\/)?([\w-]{1,32}\.[\w-]{1,32})[^\s@]*$/;
+  const urlPattern = /^(https?:\/\/)?([\w-]{1,32}\.[\w-]{1,32})[^\s@]*$/;
   if (!urlPattern.test(link)) {
     return 1;
   }
@@ -273,13 +264,15 @@ enableValidation(validationSettings);
 Promise.all([getCardList(), getUserInfo()])
   .then(([cards, userData]) => {
     cards.forEach((data) => {
-      let card=createCardElement(data, userData._id, {
-          onPreviewPicture: handlePreviewPicture,
-          onLikeIcon: likeCard,
-          onDeleteCard: (data.owner._id === userData._id) ? deleteCard : null,
-        });
-      if (data.owner._id !== userData._id){ 
-        let deleteButton = card.querySelector(".card__control-button_type_delete");
+      let card = createCardElement(data, userData._id, {
+        onPreviewPicture: handlePreviewPicture,
+        onLikeIcon: likeCard,
+        onDeleteCard: data.owner._id === userData._id ? deleteCard : null,
+      });
+      if (data.owner._id !== userData._id) {
+        let deleteButton = card.querySelector(
+          ".card__control-button_type_delete"
+        );
         deleteButton.remove();
       }
       placesWrap.append(card);
@@ -291,5 +284,3 @@ Promise.all([getCardList(), getUserInfo()])
   .catch((err) => {
     console.log(err); // В случае возникновения ошибки выводим её в консоль
   });
-
-
